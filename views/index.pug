@@ -1,5 +1,20 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{para}
+  include includes/tweet.pug
+  .bounds.app--body
+    .app--section--header
+      .grid-33
+        .app--section--heading
+          h2 Timeline
+      .grid-33
+        .app--section--heading
+          strong 129
+          h2 Following
+      .grid-33
+        .app--section--heading
+          h2 Direct Messages
+    include includes/timeline.pug
+    include includes/following.pug
+    include includes/dm.pug
+    
