@@ -4,7 +4,7 @@ const config = require('../config');
 const Twit = require('twit');
 const moment = require("moment");
 
-let timelineData = require('../data/timeline.json');
+let timelineData;
 let userData = require('../data/user.json').data;
 let followData = require('../data/following.json').users;
 let dmData = require('../data/dm.json').events.reverse();
@@ -12,6 +12,20 @@ let me = userData.id;
 
 let convos = {};
 let users = {};
+
+var T = new Twit({
+  consumer_key: config.consumer_key,
+  consumer_secret: config.consumer_secret,
+  access_token: config.access_token,
+  access_token_secret: config.access_token_secret,
+  timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
+});
+
+
+T.get('statuses/user_timeline', {count: 5},function (err, data, response) {
+  timelineData = data;
+});
+
 
 dmData.forEach(message => {
 
@@ -31,6 +45,7 @@ dmData.forEach(message => {
 
 });
 
+
 // T.get('account/verify_credentials', { skip_status: true })
 // .catch(function (err) {
 //   console.log('caught error', err.stack)
@@ -40,10 +55,7 @@ dmData.forEach(message => {
 //   screenName = result.data.screen_name;
 // });
 
-// T.get('statuses/user_timeline', {count: 5},function (err, data, response) {
-//   accountData = data;
-//   console.log(data);
-// });
+
 
 // T.get('friends/list', {count: 5},function (err, data, response) {
 //   followData = data;
@@ -59,14 +71,6 @@ dmData.forEach(message => {
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-
-  var T = new Twit({
-    consumer_key: config.consumer_key,
-    consumer_secret: config.consumer_secret,
-    access_token: config.access_token,
-    access_token_secret: config.access_token_secret,
-    timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
-  });
 
   for (const key in convos) {
     if (convos.hasOwnProperty(key)) {
@@ -114,6 +118,6 @@ router.post('/tweet', (req, res) => {
     });
   }
 
-})
+});
 
 module.exports = router;
