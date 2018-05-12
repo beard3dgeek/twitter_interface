@@ -5,105 +5,135 @@ const Twit = require('twit');
 const moment = require("moment");
 
 let timelineData;
-let userData = require('../data/user.json').data;
-let followData = require('../data/following.json').users;
-let dmData = require('../data/dm.json').events.reverse();
-let me = userData.id;
+let userData;
+let me;
+let followData;
+let dmData;
+let T;
 
 let convos = {};
 let users = {};
 
-var T = new Twit({
-  consumer_key: config.consumer_key,
-  consumer_secret: config.consumer_secret,
-  access_token: config.access_token,
-  access_token_secret: config.access_token_secret,
-  timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
-});
+const getUserData = () => {
+  return new Promise((resolve, reject) => {
+    T.get('account/verify_credentials', { skip_status: true }, function (err, data, response) {
+      if(err) {
+        return reject(err)
+      } else {
+        
+        userData = data;
+        me = userData.id;
+        return resolve();
+      }
+    });
+  });
+}
 
+const getTimelineData = () => {
+  return new Promise((resolve, reject) => {
+    T.get('statuses/user_timeline', { count: 5 }, function (err, data, response) {
+      if(err) {
+        return reject(err)
+      } else {
+        
+        timelineData = data;
+        return resolve();
+      }
+    });
+  });
+}
 
-T.get('statuses/user_timeline', {count: 5},function (err, data, response) {
-  timelineData = data;
-});
+const getFollowData = () => {
+  return new Promise((resolve, reject) => {
+    T.get('friends/list', { count: 5 }, function (err, data, response) {
+      if(err) {
+        return reject(err)
+      } else {
+        
+        followData = data.users;
+        return resolve();
+      }
+    });
+  });
+}
 
+const getDmData = () => {
+  return new Promise((resolve, reject) => {
+    T.get('direct_messages/events/list', function (err, data, response) {
+      if (err) {
+        return reject(err)
+      } else {
+        
+        dmData = data.events.reverse();
+        convos = {};
 
-dmData.forEach(message => {
+        dmData.forEach(message => {
+          let targetID = message.message_create.target.recipient_id;
+          let senderID = message.message_create.sender_id;
 
-  let targetID = message.message_create.target.recipient_id;
-  let senderID = message.message_create.sender_id;
+          if (senderID == me) {
+            message.me = true;
+            convos[targetID] = convos[targetID] || [];
+            convos[targetID].push(message);
 
-  if (senderID == me) {
-    message.me = true;
-    convos[targetID] = convos[targetID] || [];
-    convos[targetID].push(message);
+          } else {
+            message.me = false;
+            convos[senderID] = convos[senderID] || [];
+            convos[senderID].push(message);
+          }
+        });
+        return resolve();
+      }
+    });
+  });
+}
 
-  } else {
-    message.me = false;
-    convos[senderID] = convos[senderID] || [];
-    convos[senderID].push(message);
-  }
-
-});
-
-
-// T.get('account/verify_credentials', { skip_status: true })
-// .catch(function (err) {
-//   console.log('caught error', err.stack)
-// })
-// .then(function (result) {
-//   // accountData = result;
-//   screenName = result.data.screen_name;
-// });
-
-
-
-// T.get('friends/list', {count: 5},function (err, data, response) {
-//   followData = data;
-// });
-
-// T.get('direct_messages/events/list',function (err, data, response) {
-//   dmData = data;
-//   // if (err)
-//   // {
-//   //   res.render('error',{error: err, message: err.message});
-//   // }
-// });
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
 
-  for (const key in convos) {
-    if (convos.hasOwnProperty(key)) {
-      T.get('users/lookup', { user_id: key }, function (err, data, response) {
-        console.log(data);
-      });
-    }
-  }
-
-  res.render('index', {
-    moment: require("moment"),
-    name: userData.name,
-    screen_name: userData.screen_name,
-    friends_count: userData.friends_count,
-    profile_image_url: userData.profile_image_url,
-    profile_banner_url: userData.profile_banner_url,
-    timeline: timelineData,
-    following: followData,
-    messages: convos
+  T = new Twit({
+    consumer_key: config.consumer_key,
+    consumer_secret: config.consumer_secret,
+    access_token: config.access_token,
+    access_token_secret: config.access_token_secret
   });
+
+  getUserData()
+    .then(() => {
+      Promise.all([getTimelineData(), getFollowData(), getDmData()])
+        .then(() => {
+          res.render('index', {
+            moment: require("moment"),
+            name: userData.name,
+            screen_name: userData.screen_name,
+            friends_count: userData.friends_count,
+            profile_image_url: userData.profile_image_url,
+            profile_banner_url: userData.profile_banner_url,
+            timeline: timelineData,
+            following: followData,
+            messages: convos
+          })
+        })
+        .catch(error => {
+          res.render('error', { error });
+        })
+    })
+    .catch(error => {
+      res.render('error', { error });
+    });
+
 });
 
 router.post('/tweet', (req, res) => {
 
-  var T = new Twit({
+  let T = new Twit({
     consumer_key: config.consumer_key,
     consumer_secret: config.consumer_secret,
     access_token: config.access_token,
     access_token_secret: config.access_token_secret,
-    timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
   });
 
-  console.log(req.body)
   const status = req.body.tweetText;
   if (status) {
     T.post('statuses/update', {

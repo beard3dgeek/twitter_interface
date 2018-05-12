@@ -1,4 +1,8 @@
-.app--avatar(style='background-image: url(images/f-spore.png)')
-    img(src='images/f-spore.png')
+if message.me
+    .app--avatar(style='background-image: url(' + profile_image_url + ')')
+        img(src= profile_image_url)
+else
+    .app--avatar(style='background-image: url(images/f-spore.png)')
+        img(src='images/f-spore.png')
 p.app--message--text=message.message_create.message_data.text
 p.app--message--timestamp= moment(Date.parse(message.created_timestamp))

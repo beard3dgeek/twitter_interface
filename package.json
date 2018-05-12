@@ -5,7 +5,8 @@
   "main": "app.js",
   "private": true,
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "node app.js",
+    "install": "nodemon app.js"
   },
   "author": "beard3dgeek",
   "license": "MIT",

@@ -11,7 +11,7 @@ app.use(express.static('public'));
 app.use(routes);
 
 app.use((request,response,next) => {
-    const err = new Error("not found!");
+    const err = new Error("Tweet Not Found !!")
     err.status = 404;
     next(err);
 });
