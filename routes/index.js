@@ -126,6 +126,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/tweet', (req, res) => {
+  console.log('im here');
 
   let T = new Twit({
     consumer_key: config.consumer_key,
@@ -135,6 +136,7 @@ router.post('/tweet', (req, res) => {
   });
 
   const status = req.body.tweetText;
+  console.log(status);
   if (status) {
     T.post('statuses/update', {
       status: status,
@@ -143,9 +145,12 @@ router.post('/tweet', (req, res) => {
       if (err) {
         res.render('error', { error: err, message: err.message });
       } else {
-        res.redirect("/");
+        console.log(data);
+        res.render("tweet-single",{ tweet: data, moment: require("moment") });
       }
     });
+  } else {
+
   }
 
 });
