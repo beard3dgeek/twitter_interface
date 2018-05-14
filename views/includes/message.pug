@@ -2,7 +2,7 @@ if message.me
     .app--avatar(style='background-image: url(' + profile_image_url + ')')
         img(src= profile_image_url)
 else
-    .app--avatar(style='background-image: url(images/f-spore.png)')
-        img(src='images/f-spore.png')
+    .app--avatar(style='background-image: url(' + users[index].profile_image_url + ')')
+        img(src= users[index].profile_image_url)
 p.app--message--text=message.message_create.message_data.text
-p.app--message--timestamp= moment(Date.parse(message.created_timestamp))
+p.app--message--timestamp= moment(Date.parse(message.created_timestamp)).fromNow()

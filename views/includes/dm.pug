@@ -5,12 +5,15 @@
                 each convo,index in messages 
                     li
                         h3
-                            | Conversation with #{index}
-                        ul.app--message--conversation
-                            each message in convo
-                                if message.me
-                                    li.app--message--me
-                                        include message.pug
-                                else
-                                    li.app--message
-                                        include message.pug
+                            if (index == me)
+                                | Conversation with #{screen_name}
+                            else
+                                | Conversation with #{users[index].screen_name}
+                            ul.app--message--conversation
+                                each message in convo
+                                    if message.me
+                                        li.app--message--me
+                                            include message.pug
+                                    else
+                                        li.app--message
+                                            include message.pug
